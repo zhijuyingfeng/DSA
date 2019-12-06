@@ -62,11 +62,31 @@ int main()
                 "8514556665764958000126588537154781939041"
                 "71187728662780119");
     const char s[]="SchoolofDataandComputerScience,Sunyat-senUniversity";
+
+    clock_t t=clock();
     struct data d=generateData(p,q,g);
-    BigInteger k=BigInteger::randomNumber(q.bitLength()-1);
-    struct sig si=sign(s,k,d);
-    bool ans=verify(s,si,d);
-    printf("%d\n",ans);
+    BigInteger k=BigInteger::ZERO;
+    bool ans=0;
+    while(1)
+    {
+        k=BigInteger::randomNumber(q.bitLength());
+        if(k.compareTo(d.q)<0)
+        {
+            struct sig si=sign(s,k,d);
+            if(si.delta.isZero()||si.gamma.isZero())
+                continue;
+            printf("delta:\t");
+            si.delta.show();
+            printf("\ngamma:\t");
+            si.gamma.show();
+            ans=verify(s,si,d);
+            break;
+        }
+    }
+    t=clock()-t;
+    printf("\nVerification:\t%s\n",ans?"true":"false");
+    printf("\nTime elpased:\t%lfms\n\n",1000.0*t/CLOCKS_PER_SEC);
+    getchar();
     return 0;
 }
 
@@ -85,7 +105,12 @@ struct sig sign(const char* s ,const BigInteger&k,const data&d)
 struct data generateData(const BigInteger&p,const BigInteger&q,const BigInteger&g)
 {
     struct data d={p,q,g,BigInteger::ZERO,BigInteger::ZERO};
-    d.a=BigInteger::randomNumber(q.bitLength()-1);
+    while(1)
+    {
+        d.a=BigInteger::randomNumber(q.bitLength());
+        if(d.a.compareTo(q)<0)
+            break;
+    }
     d.beta=d.alpha.modPow(d.a,p);
     return d;
 }
@@ -120,6 +145,13 @@ bool verify(const char*s,struct sig& si,const data&d)
     BigInteger e1=sha.multiply(delta_inv);
     BigInteger e2=si.gamma.multiply(delta_inv);
     BigInteger alpha_e1=d.alpha.modPow(e1,d.p);
+    printf("\ne1:\t");
+    e1.show();
+    printf("\ne2:\t");
+    e2.show();
     BigInteger beta_e2=d.beta.modPow(e2,d.p);
-    return alpha_e1.multiply(beta_e2).mod(d.p).mod(d.q).compareTo(si.gamma)==0;
+    BigInteger ans= alpha_e1.multiply(beta_e2).mod(d.p).mod(d.q);
+    printf("\n(alpha^e1)(beta^e2):\t");
+    ans.show();
+    return ans.compareTo(si.gamma)==0;
 }
