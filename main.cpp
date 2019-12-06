@@ -62,7 +62,7 @@ int main()
                 "8514556665764958000126588537154781939041"
                 "71187728662780119");
     const char s[]="SchoolofDataandComputerScience,Sunyat-senUniversity";
-
+    printf("x:\t%s\n",s);
     clock_t t=clock();
     struct data d=generateData(p,q,g);
     BigInteger k=BigInteger::ZERO;
@@ -75,7 +75,7 @@ int main()
             struct sig si=sign(s,k,d);
             if(si.delta.isZero()||si.gamma.isZero())
                 continue;
-            printf("delta:\t");
+            printf("\ndelta:\t");
             si.delta.show();
             printf("\ngamma:\t");
             si.gamma.show();
@@ -96,6 +96,10 @@ struct sig sign(const char* s ,const BigInteger&k,const data&d)
     ans.gamma=d.alpha.modPow(k,d.p).mod(d.q);
     uint8_t hash[32];
     sha256(s,strlen(s),hash);
+    printf("\nSHA-256(x):\t");
+    for(int i=0;i<32;i++)
+        printf("%02x",hash[i]);
+    printf("\n");
     BigInteger sha=hash2BigInteger(hash);
     BigInteger k_inv=k.modInverse(d.q);
     ans.delta=sha.add(d.a.multiply(ans.gamma)).multiply(k_inv);
